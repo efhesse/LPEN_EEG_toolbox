@@ -1,0 +1,2 @@
+w_epoch| epoch_window= [-0.5 1.5]| base_window= [-500 0]| file2save
+w_NO_epoch| NoInput

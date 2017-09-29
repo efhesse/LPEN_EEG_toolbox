@@ -1,0 +1,10 @@
+print_channels_labels| File name
+w_print_electrode_information| File name
+w_load_channel_location| node_file_name=  
+w_preprocess| file_name= Ignacio2| notchHz= [50 100]| notchWidth= 1| bandpassRange= [1 200]
+w_notch_filter| notchHz= [50]| notchWidth= 1
+w_bandpass_filter| bandpassRange= [1 200]
+w_temporal_trim_epochs_EEG| file_path= | time_range= [-200 800]| path_to_save= 
+w_remove_epochs_EEG| path_to_allepochs= | path_to_preprocessed_files= | epochs_to_remove= | path_to_save= 
+w_remove_average_condition_baseline_EEG| path_to_files= | epochs= | time_range= [-200 800]| path_to_save= 
+w_rename_marks_EEG| path_to_files= | condition_names= | condition_marks= | path_to_save= 
