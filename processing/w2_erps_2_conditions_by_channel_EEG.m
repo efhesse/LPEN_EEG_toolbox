@@ -105,19 +105,6 @@ files = dir(fullfile(path_to_files,'*.set'));
 filenames = {files.name}';  
 file_nr = size(filenames,1);
 
-% c1_erps = []; %4D matrix where results will be stored (channels, freq, times, subjects)
-% c2_erps = [];
-% c1_c2_erps = [];
-% c1_tfX = []; %5D matrix single trial results (channels,freq,times,epochs,subjects)
-% c2_tfX = [];
-% c1_erpsboot = []; %4D matrix where statistical results will be stored (channels, freq, times, subjects)
-% c2_erpsboot = [];
-% c1_c2_erpsboot = [];
-% c1_mbases = []; %2D matrix, where baseline powers are stored (base,subjects)
-% c2_mbases = [];
-% c1_data = [];
-% c2_data = [];
-%for suj = 1 : 2
 for suj = 1 : file_nr
     file_name = filenames{suj};
     disp(path_to_files)
@@ -144,7 +131,6 @@ for suj = 1 : file_nr
     %condition 2 EEG
     c2_EEG = pop_selectevent( EEG, 'type', {condition_2} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
         
-    %for ch = 1 : 2        
     for ch = 1 : ch_nr        
         chanlabel = EEG.chanlocs(ch).labels;        
         tlimits = [EEG.xmin, EEG.xmax]*1000;
@@ -185,49 +171,62 @@ for suj = 1 : file_nr
         c2_mbases(ch,:,suj) = mbase{2};                        
     end
     
+    %save data for suj
+    s_erps = {c1_erps(:,:,:,suj),c2_erps(:,:,:,suj),c1_c2_erps(:,:,:,suj)};
+    s_erpsboot = {c1_erpsboot(:,:,:,suj),c2_erpsboot(:,:,:,suj),c1_c2_erpsboot(:,:,:,suj)};
+    s_tfX = {c1_tfX,c2_tfX};
+    s_mbases = {c1_mbases(:,:,:,suj),c2_mbases(:,:,:,suj)};
+    
+    [filepath,file_name_to_save,ext] = fileparts(file_name);    
+    mat_name = fullfile(path_to_save,[file_name_to_save '_' condition_1 '_' condition_2 '.mat']);
+    save(mat_name, 's_erps','s_erpsboot','s_tfX','s_mbases','timesout','freqs','g');
+    
+    clear s_erps s_erpsboot s_tfX s_mbases 
     c1_alltfX(suj).tfX = c1_tfX;
     c2_alltfX(suj).tfX = c2_tfX;
 end
 
 %save results
-    %erps = {c1_erps,c2_erps,c1_c2_erps,c1_2_erps_p};
-    erps = {c1_erps,c2_erps,c1_c2_erps};
-    erpsboot = {c1_erpsboot,c2_erpsboot,c1_c2_erpsboot};
-    tfX = {c1_alltfX,c2_alltfX};
-    mbases = {c1_mbases,c2_mbases};
-    %save results in mat
-    mat_name = fullfile(path_to_save,[condition_1 '_' condition_2 '.mat']);
-    save(mat_name, 'erps','erpsboot','tfX','mbases','timesout','freqs','g');
-    
-    %calculate mean erps for all subjects, and mean baseline
-    mean_base1 = mean(mbases{1},3);
-    mean_base2 = mean(mbases{2},3);
-    mean_P1 = mean(c1_erps,4);
-    mean_P2 = mean(c2_erps,4);
-    mean_P1_2 = mean(c1_c2_erps,4);
-    mean_base = {mean_base1,mean_base2};
-    P_all = {mean_P1, mean_P2,mean_P1_2};    
-    
-    %plot------------------------------
-    %for ch = 1 : 2
-    for ch = 1 : ch_nr
-        disp(['About to plot ch' num2str(ch)])
-        chanlabel = EEG.chanlocs(ch).labels; 
-        P_to_plot = {squeeze(P_all{1}(ch,:,:)),squeeze(P_all{2}(ch,:,:)),squeeze(P_all{3}(ch,:,:))};
-        mbase_to_plot = {squeeze(mean_base{1}(ch,:,:)) squeeze(mean_base{2}(ch,:,:))};
-        g.topovec = ch; %index del valor a plotear
-        hdl = m_newtimef_2_conditons_plotting(g,P_to_plot,[],[],[],mbase_to_plot,freqs,timesout);
-        %plot settings        
-        set(hdl,'color', 'none','units','pixels','position',[0,0,1421,356],'PaperUnits', 'centimeters','PaperSize',[37.59,9.42],'PaperPosition', [0 0 37.59 9.42])               
-        %[ inches | centimeters | normalized | points | {pixels} | characters ]
-                
-        %save image
-        plot_name = fullfile(path_to_save,[chanlabel '_' condition_1 '-' condition_2 '.tif']);        
-        print(hdl,plot_name,'-dtiff','-r0')
-        
-        %close figure
-        close(hdl)
+erps = {c1_erps,c2_erps,c1_c2_erps};
+erpsboot = {c1_erpsboot,c2_erpsboot,c1_c2_erpsboot};
+tfX = {c1_alltfX,c2_alltfX};
+mbases = {c1_mbases,c2_mbases};
 
-    end
+%save results in mat
+prefix_file_name_to_save = [condition_1 '_' condition_2];
+mat_name = fullfile(path_to_save,[prefix_file_name_to_save '.mat']);
+save(mat_name, 'erps','erpsboot','tfX','mbases','timesout','freqs','g');
 
 
+%plot -> TODO add conditional
+plot_erps_2_conditions_by_channel(mat_name,EEG,path_to_save,prefix_file_name_to_save)
+
+% %calculate mean erps for all subjects, and mean baseline
+% mean_base1 = mean(mbases{1},3);
+% mean_base2 = mean(mbases{2},3);
+% mean_P1 = mean(c1_erps,4);
+% mean_P2 = mean(c2_erps,4);
+% mean_P1_2 = mean(c1_c2_erps,4);
+% mean_base = {mean_base1,mean_base2};
+% P_all = {mean_P1, mean_P2,mean_P1_2};    
+% 
+% %plot------------------------------
+% %for ch = 1 : 2
+% for ch = 1 : ch_nr
+%     disp(['About to plot ch' num2str(ch)])
+%     chanlabel = EEG.chanlocs(ch).labels; 
+%     P_to_plot = {squeeze(P_all{1}(ch,:,:)),squeeze(P_all{2}(ch,:,:)),squeeze(P_all{3}(ch,:,:))};
+%     mbase_to_plot = {squeeze(mean_base{1}(ch,:,:)) squeeze(mean_base{2}(ch,:,:))};
+%     g.topovec = ch; %index del valor a plotear
+%     hdl = m_newtimef_2_conditons_plotting(g,P_to_plot,[],[],[],mbase_to_plot,freqs,timesout);
+%     %plot settings        
+%     set(hdl,'color', 'none','units','pixels','position',[0,0,1421,356],'PaperUnits', 'centimeters','PaperSize',[37.59,9.42],'PaperPosition', [0 0 37.59 9.42])               
+%     %[ inches | centimeters | normalized | points | {pixels} | characters ]
+% 
+%     %save image
+%     plot_name = fullfile(path_to_save,[chanlabel '_' condition_1 '-' condition_2 '.tif']);        
+%     print(hdl,plot_name,'-dtiff','-r0')
+% 
+%     %close figure
+%     close(hdl)
+% end
