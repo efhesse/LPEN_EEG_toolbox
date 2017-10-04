@@ -129,15 +129,15 @@ for suj = 1 : file_nr
     %condition 1 EEG
     c1_EEG = pop_selectevent( EEG, 'type', {condition_1} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
     %condition 2 EEG
-    c2_EEG = pop_selectevent( EEG, 'type', {condition_2} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
+    c2_EEG = pop_selectevent( EEG, 'type', {condition_2} ,'deleteevents','off','deleteepochs','on','invertepochs','off');    
+      
+    tlimits = [EEG.xmin, EEG.xmax]*1000;
+    pointrange1 = round(max((tlimits(1)/1000-EEG.xmin)*EEG.srate, 1));
+    pointrange2 = round(min((tlimits(2)/1000-EEG.xmin)*EEG.srate, EEG.pnts));
+    pointrange = [pointrange1:pointrange2];
         
     for ch = 1 : ch_nr        
-        chanlabel = EEG.chanlocs(ch).labels;        
-        tlimits = [EEG.xmin, EEG.xmax]*1000;
-        
-        pointrange1 = round(max((tlimits(1)/1000-EEG.xmin)*EEG.srate, 1));
-        pointrange2 = round(min((tlimits(2)/1000-EEG.xmin)*EEG.srate, EEG.pnts));
-        pointrange = [pointrange1:pointrange2];
+        chanlabel = EEG.chanlocs(ch).labels;      
         
         c1_tmpsig = c1_EEG.data(ch,pointrange,:);
         c1_tmpsig = reshape( c1_tmpsig, length(ch), size(c1_tmpsig,2)*size(c1_tmpsig,3));
