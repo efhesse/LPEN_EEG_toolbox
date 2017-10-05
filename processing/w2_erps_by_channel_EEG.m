@@ -1,4 +1,4 @@
-function [data] = w2_erps_2_conditions_by_channel_EEG(path_to_files,condition_1,condition_2,cycles,freq_range,alpha,fdr,scale,basenorm,erps_max,path_to_save,data)
+function [data] = w2_erps_by_channel_EEG(path_to_files,condition_1,condition_2,cycles,freq_range,alpha,fdr,scale,basenorm,erps_max,path_to_save,data)
 %-------DESCRIPTION---------------
 %Every set in the specified directory is loaded and separated into two EEG structs for each condition.
 %Sets' epoch types must be named as conditions_1 and condition_2.
@@ -105,7 +105,8 @@ files = dir(fullfile(path_to_files,'*.set'));
 filenames = {files.name}';  
 file_nr = size(filenames,1);
 
-for suj = 1 : file_nr
+for suj = 1 : 1
+%for suj = 1 : file_nr
     file_name = filenames{suj};
     disp(path_to_files)
     disp(file_name)
@@ -120,38 +121,49 @@ for suj = 1 : file_nr
     c1_c2_erpsboot = [];
     c1_mbases = []; %2D matrix, where baseline powers are stored (base,subjects)
     c2_mbases = [];
-    c1_data = [];
-    c2_data = [];
 
     %load set
     EEG = pop_loadset('filename',file_name,'filepath', path_to_files);
     ch_nr = length(EEG.chanlocs); %number of channel
-    %condition 1 EEG
-    c1_EEG = pop_selectevent( EEG, 'type', {condition_1} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
-    %condition 2 EEG
-    c2_EEG = pop_selectevent( EEG, 'type', {condition_2} ,'deleteevents','off','deleteepochs','on','invertepochs','off');    
-      
+    
+    %load EEG according to condition selections
+    c2_EEG = [];
+    if ~isempty(condition_1) && ~isempty(condition_2) %two conditions
+        c1_EEG = pop_selectevent( EEG, 'type', {condition_1} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
+        c2_EEG = pop_selectevent( EEG, 'type', {condition_2} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
+    elseif isempty(condition_1) && isempty(condition_2) %no filtering by condition, one dataset
+        c1_EEG = EEG;
+    else    %only one condition filtering, one dataset
+        if isempty(condition_1) && ~isempty(condition_2) %
+            c1_EEG = pop_selectevent( EEG, 'type', {condition_2} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
+        else
+            c1_EEG = pop_selectevent( EEG, 'type', {condition_1} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
+        end
+    end 
+        
+    %calculate point range 
     tlimits = [EEG.xmin, EEG.xmax]*1000;
     pointrange1 = round(max((tlimits(1)/1000-EEG.xmin)*EEG.srate, 1));
     pointrange2 = round(min((tlimits(2)/1000-EEG.xmin)*EEG.srate, EEG.pnts));
     pointrange = [pointrange1:pointrange2];
         
-    for ch = 1 : ch_nr        
+    for ch = 1 : 3        
+    %for ch = 1 : ch_nr        
         chanlabel = EEG.chanlocs(ch).labels;      
         
         c1_tmpsig = c1_EEG.data(ch,pointrange,:);
         c1_tmpsig = reshape( c1_tmpsig, length(ch), size(c1_tmpsig,2)*size(c1_tmpsig,3));
-        c2_tmpsig = c2_EEG.data(ch,pointrange,:);
-        c2_tmpsig = reshape( c2_tmpsig, length(ch), size(c2_tmpsig,2)*size(c2_tmpsig,3));
+        data = c1_tmpsig(:,:);
+        
+        if ~isempty(condition_2)
+            c2_tmpsig = c2_EEG.data(ch,pointrange,:);
+            c2_tmpsig = reshape( c2_tmpsig, length(ch), size(c2_tmpsig,2)*size(c2_tmpsig,3));
+            data = {c1_tmpsig(:,:),c2_tmpsig(:,:)};
+        end
 
-        %calculate timefreq for each condition and the their subtraction
-        %condition_1 - condition_2
-        %NOTE: plotersp is set to off because of a bug generated while
-        %using varargin in recursive calls, which becomes larger with each
-        %call and the settings are not respected (several undesired plots were
-        %generated)
-        %plot
-        [P,R,mbase,timesout,freqs,Pboot,Rboot,alltfX,g] = newtimef_2_conditions( {c1_tmpsig(:, :),c2_tmpsig(:, :)}, length(pointrange), [tlimits(1) tlimits(2)], EEG.srate, cycles, 'plotersp','off', 'plotitc' , 'off','topovec', ch, 'elocs', EEG.chanlocs,'title',{condition_1 condition_2},'freqs',freq_range,'alpha',alpha,'mcorrect',fdr,'scale',scale,'basenorm',basenorm,'erspmax',erps_max, 'ntimesout', 400, 'padratio', 4,'baseline',[0],'caption',chanlabel) ;                        
+        %calculate timefreq 
+        %[P,R,mbase,timesout,freqs,Pboot,Rboot,alltfX,g] = newtimef_2_conditions( {c1_tmpsig(:, :),c2_tmpsig(:, :)}, length(pointrange), [tlimits(1) tlimits(2)], EEG.srate, cycles, 'plotersp','off', 'plotitc' , 'off','topovec', ch, 'elocs', EEG.chanlocs,'title',{condition_1 condition_2},'freqs',freq_range,'alpha',alpha,'mcorrect',fdr,'scale',scale,'basenorm',basenorm,'erspmax',erps_max, 'ntimesout', 400, 'padratio', 4,'baseline',[0],'caption',chanlabel) ;                        
+        [P,R,mbase,timesout,freqs,Pboot,Rboot,alltfX,g] = newtimef_2_conditions( data, length(pointrange), [tlimits(1) tlimits(2)], EEG.srate, cycles, 'plotersp','off', 'plotitc' , 'off','topovec', ch, 'elocs', EEG.chanlocs,'title',{condition_1 condition_2},'freqs',freq_range,'alpha',alpha,'mcorrect',fdr,'scale',scale,'basenorm',basenorm,'erspmax',erps_max, 'ntimesout', 400, 'padratio', 4,'baseline',[0],'caption',chanlabel) ;                        
         
         %load results in matrices of overall results    
         c1_erps(ch,:,:,suj) = P{1};
@@ -198,34 +210,4 @@ save(mat_name, 'erps','erpsboot','tfX','mbases','timesout','freqs','g');
 
 
 %plot -> TODO add conditional
-plot_erps_2_conditions_by_channel(mat_name,EEG,path_to_save,prefix_file_name_to_save)
-
-% %calculate mean erps for all subjects, and mean baseline
-% mean_base1 = mean(mbases{1},3);
-% mean_base2 = mean(mbases{2},3);
-% mean_P1 = mean(c1_erps,4);
-% mean_P2 = mean(c2_erps,4);
-% mean_P1_2 = mean(c1_c2_erps,4);
-% mean_base = {mean_base1,mean_base2};
-% P_all = {mean_P1, mean_P2,mean_P1_2};    
-% 
-% %plot------------------------------
-% %for ch = 1 : 2
-% for ch = 1 : ch_nr
-%     disp(['About to plot ch' num2str(ch)])
-%     chanlabel = EEG.chanlocs(ch).labels; 
-%     P_to_plot = {squeeze(P_all{1}(ch,:,:)),squeeze(P_all{2}(ch,:,:)),squeeze(P_all{3}(ch,:,:))};
-%     mbase_to_plot = {squeeze(mean_base{1}(ch,:,:)) squeeze(mean_base{2}(ch,:,:))};
-%     g.topovec = ch; %index del valor a plotear
-%     hdl = m_newtimef_2_conditons_plotting(g,P_to_plot,[],[],[],mbase_to_plot,freqs,timesout);
-%     %plot settings        
-%     set(hdl,'color', 'none','units','pixels','position',[0,0,1421,356],'PaperUnits', 'centimeters','PaperSize',[37.59,9.42],'PaperPosition', [0 0 37.59 9.42])               
-%     %[ inches | centimeters | normalized | points | {pixels} | characters ]
-% 
-%     %save image
-%     plot_name = fullfile(path_to_save,[chanlabel '_' condition_1 '-' condition_2 '.tif']);        
-%     print(hdl,plot_name,'-dtiff','-r0')
-% 
-%     %close figure
-%     close(hdl)
-% end
+%plot_erps_2_conditions_by_channel(mat_name,EEG,path_to_save,prefix_file_name_to_save)

@@ -16,4 +16,5 @@ w_plot_wSMI_distance_by_equal_id| task_name= Retention_Faces| condition_1= Ignac
 w_brief_time_span_connectivity| condition_1= int| condition_2= acc| bandpassRange= [2 40]| epoch_window= [-0.5 1.5]| base_window= [-500 0]| method= boot| path_to_save= BTS| file2save= Ignacio
 w_smi_EEG| filepath_to_data= D:\Datos| data_range= [0 0.1]| kernel= 3| taus= [1 2 4 8 16 32]
 w_smi_stats_EEG| filepath_to_data = D:\Datos| filepath_to_save = D:\Resultados| taus= [1 2 4 8 16 32]| condition1= A| condition2= B| channel_nr= 128| stat_method= boot| alpha= 0.05
-w_erps_2_conditions_by_channel_EEG| path_to_files= | condition_1= | condition_2= | cycles= | freq_range= 4 40| alpha= 0.05| fdr= on| scale= log| basenorm= off| erps_max= |  path_to_save= 
+w_erps_2_conditions_by_channel_EEG| path_to_files= | condition_1= | condition_2= | cycles= | freq_range= 4 40| alpha= 0.05| fdr= on| scale= log| basenorm= off| erps_max= | path_to_save= 
+w_erps_by_channel_EEG| path_to_files= | condition_1= | condition_2= | cycles= 0| freq_range= 4 40| alpha= | fdr= None| scale= log| basenorm= off| erps_max= | path_to_save= 

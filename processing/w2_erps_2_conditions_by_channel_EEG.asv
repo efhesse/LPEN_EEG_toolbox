@@ -157,10 +157,11 @@ for suj = 1 : file_nr
         c1_erps(ch,:,:,suj) = P{1};
         c2_erps(ch,:,:,suj) = P{2};
         c1_c2_erps(ch,:,:,suj) = P{3};
-                
+        %c1_2_erps_p(ch,:,:,suj) = P{1}-P{2};
+        
         if ~isnan(alpha)
-            c1_erpsboot(ch,:,:,suj) = Pboot{1};
-            c2_erpsboot(ch,:,:,suj) = Pboot{2};
+            c1_erpsboot(ch,:,:,:,suj) = Pboot{1};
+            c2_erpsboot(ch,:,:,:,suj) = Pboot{2};
             c1_c2_erpsboot(ch,:,:,:,suj) = Pboot{3};
         end
             
