@@ -105,8 +105,7 @@ files = dir(fullfile(path_to_files,'*.set'));
 filenames = {files.name}';  
 file_nr = size(filenames,1);
 
-for suj = 1 : 2
-%for suj = 1 : file_nr
+for suj = 1 : file_nr
     file_name = filenames{suj};
     disp(path_to_files)
     disp(file_name)
@@ -150,9 +149,8 @@ for suj = 1 : 2
     pointrange1 = round(max((tlimits(1)/1000-EEG.xmin)*EEG.srate, 1));
     pointrange2 = round(min((tlimits(2)/1000-EEG.xmin)*EEG.srate, EEG.pnts));
     pointrange = [pointrange1:pointrange2];
-        
-    for ch = 1 : 3        
-    %for ch = 1 : ch_nr        
+     
+    for ch = 1 : ch_nr        
         chanlabel = EEG.chanlocs(ch).labels;      
         
         c1_tmpsig = c1_EEG.data(ch,pointrange,:);
