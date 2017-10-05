@@ -105,7 +105,7 @@ files = dir(fullfile(path_to_files,'*.set'));
 filenames = {files.name}';  
 file_nr = size(filenames,1);
 
-for suj = 1 : 1
+for suj = 1 : 2
 %for suj = 1 : file_nr
     file_name = filenames{suj};
     disp(path_to_files)
@@ -127,14 +127,18 @@ for suj = 1 : 1
     ch_nr = length(EEG.chanlocs); %number of channel
     
     %load EEG according to condition selections
+    two_conditions = 0;
     c2_EEG = [];
     if ~isempty(condition_1) && ~isempty(condition_2) %two conditions
+        two_conditions = 1;
         c1_EEG = pop_selectevent( EEG, 'type', {condition_1} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
         c2_EEG = pop_selectevent( EEG, 'type', {condition_2} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
     elseif isempty(condition_1) && isempty(condition_2) %no filtering by condition, one dataset
         c1_EEG = EEG;
     else    %only one condition filtering, one dataset
         if isempty(condition_1) && ~isempty(condition_2) %
+            condition_1 = condition_2;
+            condition_2 = '';
             c1_EEG = pop_selectevent( EEG, 'type', {condition_2} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
         else
             c1_EEG = pop_selectevent( EEG, 'type', {condition_1} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
@@ -153,61 +157,92 @@ for suj = 1 : 1
         
         c1_tmpsig = c1_EEG.data(ch,pointrange,:);
         c1_tmpsig = reshape( c1_tmpsig, length(ch), size(c1_tmpsig,2)*size(c1_tmpsig,3));
-        data = c1_tmpsig(:,:);
+        data_to_process = c1_tmpsig(:,:);
         
         if ~isempty(condition_2)
             c2_tmpsig = c2_EEG.data(ch,pointrange,:);
             c2_tmpsig = reshape( c2_tmpsig, length(ch), size(c2_tmpsig,2)*size(c2_tmpsig,3));
-            data = {c1_tmpsig(:,:),c2_tmpsig(:,:)};
+            data_to_process = {c1_tmpsig(:,:),c2_tmpsig(:,:)};
         end
 
         %calculate timefreq 
         %[P,R,mbase,timesout,freqs,Pboot,Rboot,alltfX,g] = newtimef_2_conditions( {c1_tmpsig(:, :),c2_tmpsig(:, :)}, length(pointrange), [tlimits(1) tlimits(2)], EEG.srate, cycles, 'plotersp','off', 'plotitc' , 'off','topovec', ch, 'elocs', EEG.chanlocs,'title',{condition_1 condition_2},'freqs',freq_range,'alpha',alpha,'mcorrect',fdr,'scale',scale,'basenorm',basenorm,'erspmax',erps_max, 'ntimesout', 400, 'padratio', 4,'baseline',[0],'caption',chanlabel) ;                        
-        [P,R,mbase,timesout,freqs,Pboot,Rboot,alltfX,g] = newtimef_2_conditions( data, length(pointrange), [tlimits(1) tlimits(2)], EEG.srate, cycles, 'plotersp','off', 'plotitc' , 'off','topovec', ch, 'elocs', EEG.chanlocs,'title',{condition_1 condition_2},'freqs',freq_range,'alpha',alpha,'mcorrect',fdr,'scale',scale,'basenorm',basenorm,'erspmax',erps_max, 'ntimesout', 400, 'padratio', 4,'baseline',[0],'caption',chanlabel) ;                        
-        
-        %load results in matrices of overall results    
-        c1_erps(ch,:,:,suj) = P{1};
-        c2_erps(ch,:,:,suj) = P{2};
-        c1_c2_erps(ch,:,:,suj) = P{3};
-                
-        if ~isnan(alpha)
-            c1_erpsboot(ch,:,:,suj) = Pboot{1};
-            c2_erpsboot(ch,:,:,suj) = Pboot{2};
-            c1_c2_erpsboot(ch,:,:,:,suj) = Pboot{3};
+        if two_conditions
+            [P,R,mbase,timesout,freqs,Pboot,Rboot,alltfX,g] = newtimef_2_conditions( data_to_process, length(pointrange), [tlimits(1) tlimits(2)], EEG.srate, cycles, 'plotersp','off', 'plotitc' , 'off','topovec', ch, 'elocs', EEG.chanlocs,'title',{condition_1 condition_2},'freqs',freq_range,'alpha',alpha,'mcorrect',fdr,'scale',scale,'basenorm',basenorm,'erspmax',erps_max, 'ntimesout', 400, 'padratio', 4,'baseline',[0],'caption',chanlabel) ; 
+        else
+            [P,R,mbase,timesout,freqs,Pboot,Rboot,alltfX,PA,g] = m_newtimef( data_to_process, length(pointrange), [tlimits(1) tlimits(2)], EEG.srate, cycles, 'plotersp','off', 'plotitc' , 'off','topovec', ch, 'elocs', EEG.chanlocs,'title',{condition_1 condition_2},'freqs',freq_range,'alpha',alpha,'mcorrect',fdr,'scale',scale,'basenorm',basenorm,'erspmax',erps_max, 'ntimesout', 400, 'padratio', 4,'baseline',[0],'caption',chanlabel) ;                        
         end
-            
-        c1_tfX(ch,:,:,:) = alltfX{1};
-        c2_tfX(ch,:,:,:) = alltfX{2};
-        c1_mbases(ch,:,suj) = mbase{1};        
-        c2_mbases(ch,:,suj) = mbase{2};                        
+        
+        
+        %load results in matrices of overall results            
+        if two_conditions
+            c1_erps(ch,:,:,suj) = P{1};
+            c2_erps(ch,:,:,suj) = P{2};
+            c1_c2_erps(ch,:,:,suj) = P{3};
+
+            if ~isnan(alpha)
+                c1_erpsboot(ch,:,:,suj) = Pboot{1};
+                c2_erpsboot(ch,:,:,suj) = Pboot{2};
+                c1_c2_erpsboot(ch,:,:,:,suj) = Pboot{3};
+            end
+
+            c1_tfX(ch,:,:,:) = alltfX{1};
+            c2_tfX(ch,:,:,:) = alltfX{2};
+            c1_mbases(ch,:,suj) = mbase{1};        
+            c2_mbases(ch,:,suj) = mbase{2};                        
+        else
+            c1_erps(ch,:,:,suj) = P;
+            if ~isnan(alpha)
+                c1_erpsboot(ch,:,:,suj) = Pboot;                
+            end
+            c1_tfX(ch,:,:,:) = alltfX;
+            c1_mbases(ch,:,suj) = mbase;        
+        end
     end
     
     %save data for suj
-    s_erps = {c1_erps(:,:,:,suj),c2_erps(:,:,:,suj),c1_c2_erps(:,:,:,suj)};
-    s_erpsboot = {c1_erpsboot(:,:,:,suj),c2_erpsboot(:,:,:,suj),c1_c2_erpsboot(:,:,:,suj)};
-    s_tfX = {c1_tfX,c2_tfX};
-    s_mbases = {c1_mbases(:,:,:,suj),c2_mbases(:,:,:,suj)};
-    
-    [filepath,file_name_to_save,ext] = fileparts(file_name);    
-    mat_name = fullfile(path_to_save,[file_name_to_save '_' condition_1 '_' condition_2 '.mat']);
+    [filepath,file_name_to_save,ext] = fileparts(file_name);
+    if two_conditions
+        mat_name = fullfile(path_to_save,[file_name_to_save '_' condition_1 '_' condition_2 '.mat']);
+        s_erps = {c1_erps(:,:,:,suj),c2_erps(:,:,:,suj),c1_c2_erps(:,:,:,suj)};
+        s_erpsboot = {c1_erpsboot(:,:,:,suj),c2_erpsboot(:,:,:,suj),c1_c2_erpsboot(:,:,:,suj)};
+        s_tfX = {c1_tfX,c2_tfX};
+        s_mbases = {c1_mbases(:,:,suj),c2_mbases(:,:,suj)};
+        c1_alltfX(suj).tfX = c1_tfX;
+        c2_alltfX(suj).tfX = c2_tfX;
+    else
+        mat_name = fullfile(path_to_save,[file_name_to_save '_' condition_1 '.mat']);
+        s_erps = c1_erps(:,:,:,suj);
+        s_erpsboot = c1_erpsboot(:,:,:,suj);
+        s_tfX = c1_tfX;
+        s_mbases = c1_mbases(:,:,suj);        
+        c1_alltfX(suj).tfX = c1_tfX;
+    end
+
     save(mat_name, 's_erps','s_erpsboot','s_tfX','s_mbases','timesout','freqs','g');
     
     clear s_erps s_erpsboot s_tfX s_mbases 
-    c1_alltfX(suj).tfX = c1_tfX;
-    c2_alltfX(suj).tfX = c2_tfX;
 end
 
 %save results
-erps = {c1_erps,c2_erps,c1_c2_erps};
-erpsboot = {c1_erpsboot,c2_erpsboot,c1_c2_erpsboot};
-tfX = {c1_alltfX,c2_alltfX};
-mbases = {c1_mbases,c2_mbases};
+if two_conditions
+    erps = {c1_erps,c2_erps,c1_c2_erps};
+    erpsboot = {c1_erpsboot,c2_erpsboot,c1_c2_erpsboot};
+    tfX = {c1_alltfX,c2_alltfX};
+    mbases = {c1_mbases,c2_mbases};
+    prefix_file_name_to_save = [condition_1 '_' condition_2];
+else
+    erps = c1_erps;
+    erpsboot = c1_erpsboot;
+    tfX = c1_alltfX;
+    mbases = c1_mbases;
+    prefix_file_name_to_save = [condition_1];
+end
 
 %save results in mat
-prefix_file_name_to_save = [condition_1 '_' condition_2];
+
 mat_name = fullfile(path_to_save,[prefix_file_name_to_save '.mat']);
 save(mat_name, 'erps','erpsboot','tfX','mbases','timesout','freqs','g');
-
 
 %plot -> TODO add conditional
 %plot_erps_2_conditions_by_channel(mat_name,EEG,path_to_save,prefix_file_name_to_save)

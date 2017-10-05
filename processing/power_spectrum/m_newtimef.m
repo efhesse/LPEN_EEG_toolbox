@@ -366,7 +366,7 @@
 % 03-16-02 timeout automatically adjusted if too high -ad
 % 04-02-02 added 'coher' option -ad
 
-function [P,R,mbase,timesout,freqs,Pboot,Rboot,alltfX,PA] = m_newtimef( data, frames, tlimits, Fs, varwin, varargin);
+function [P,R,mbase,timesout,freqs,Pboot,Rboot,alltfX,PA,g] = m_newtimef( data, frames, tlimits, Fs, varwin, varargin);
 
 % Note: Above, PA is output of 'phsamp','on'
 
