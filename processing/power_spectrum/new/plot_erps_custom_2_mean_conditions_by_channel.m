@@ -60,10 +60,6 @@ for ch = 1 : length(channel_labels)
         maskitc_to_plot = {[],[]};
     end
     resdiff_to_plot = {squeeze(resdiff{1}(ch,:,:)),squeeze(resdiff{2}(ch,:,:))};
-    %alltfX_to_plot = {};        
-    %plot_erps_2_conditions_tiff(P_to_plot,mbase_to_plot,g,freqs,timesout,path_to_save,[chanlabel '_' prefix_file_name_to_save]);
-    %custom_plottimef_2_conditions(g,mdata_to_plot,P_to_plot,R_to_plot,Pboot_to_plot,Rboot_to_plot,freqs, timesout,mbase_to_plot,maskerps_to_plot,maskitc_to_plot,resdiff_to_plot,alltfX_to_plot);
-    %custom_plottimef_2_conditions(g,mdata_to_plot,P_to_plot,R_to_plot,Pboot_to_plot,Rboot_to_plot,freqs, timesout,mbase_to_plot,maskerps_to_plot,maskitc_to_plot,resdiff_to_plot);
     hdl = custom_plottimef_2_conditions(g,mdata_to_plot,P_to_plot,R_to_plot,Pboot_to_plot,Rboot_to_plot,freqs, timesout,mbase_to_plot,maskerps_to_plot,maskitc_to_plot,resdiff_to_plot);
     set(hdl,'color', 'none','units','pixels','position',[0,0,1421,356],'PaperUnits', 'centimeters','PaperSize',[37.59,9.42],'PaperPosition', [0 0 37.59 9.42])               
     %[ inches | centimeters | normalized | points | {pixels} | characters ]

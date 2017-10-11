@@ -13,9 +13,11 @@ g = m.g;
 
 if strcmp(stats,'off') 
     g.alpha = nan;
+else
+    assert(~isnan(g.alpha),'Error. Stats ON incompatible with data providen.')
 end
 
-if ~isempty(g.alpha)
+if ~isnan(g.alpha)
     Pboot = mean(m.erpsboot,4);
     Rboot = mean(m.itcboot,3);
     maskersp = mean(m.maskerps,4);

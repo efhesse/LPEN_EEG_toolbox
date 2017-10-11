@@ -18,3 +18,6 @@ w_smi_EEG| filepath_to_data= D:\Datos| data_range= [0 0.1]| kernel= 3| taus= [1 
 w_smi_stats_EEG| filepath_to_data = D:\Datos| filepath_to_save = D:\Resultados| taus= [1 2 4 8 16 32]| condition1= A| condition2= B| channel_nr= 128| stat_method= boot| alpha= 0.05
 w_erps_2_conditions_by_channel_EEG| path_to_files= | condition_1= | condition_2= | cycles= | freq_range= 4 40| alpha= 0.05| fdr= on| scale= log| basenorm= off| erps_max= | path_to_save= 
 w_erps_by_channel_EEG| path_to_files= | condition_1= | condition_2= | cycles= 0| freq_range= 4 40| alpha= | fdr= None| scale= log| basenorm= off| erps_max= | path_to_save= 
+w_custom_newtimef_2_precalculated_conditions_by_channel_EEG| path_to_files= | condition1_data= | condition2_data= | path_to_save= 
+w_plot_custom_erps_by_channel_EEG| path_to_file= | file_name= | condition_nr= | stats= | path_to_save= 
+w_custom_erps_by_channel_EEG| path_to_files= | condition_1= | condition_2= | cycles= | freq_range= | alpha= | fdr= | scale= | basenorm= | erps_max= | path_to_save=

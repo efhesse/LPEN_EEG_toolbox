@@ -1,7 +1,91 @@
 function [data] = w2_custom_erps_by_channel_EEG(path_to_files,condition_1,condition_2,cycles,freq_range,alpha,fdr,scale,basenorm,erps_max,path_to_save,data);
 
 %-------DESCRIPTION---------------
-%SEE NEW_TIMEF OR w2_erps_by_channel
+%Calculates time frequency charts for every set in the specified directory.
+%Sets are loaded, and filtered by the conditions completed. If only one condition is completed, 
+%sets will be filtered by the input condition; if two conditions are completed, 
+%sets will be filtered into two separate objects, their time frequency charts 
+%and their difference will be calculated (condition_1 - condition_2); 
+%if NO condition is loaded time frequency charts for the unfiltered set will be calculated.
+%Sets' epoch types must be named as condition_1 and condition_2, if filtering is selected.
+%Results are saved in .mats in the provided directory for the time frequency charts per
+%channel and parameters per subject, and overall.
+%IMPORANT: sets are assumed to have chanlocs loaded, and their marks
+%contain condition_1 and condition_2 as a single string. This is relevant
+%when several marks represent a condition, then the epoch types must be
+%renamed to a unique string value of condition.
+%INPUTS: 
+%   * path_to_files: the sets' directory. 
+%   * condition_1: string of the name of the first condition. Sets must
+%           have epoch types named as this string. Optional.
+%   * condition_2: string of the name of the second condition. Sets must
+%           have epoch types names as this string. Optional.
+%   * cycles:       [real] indicates the number of cycles for the time-frequency 
+%                        decomposition {default: 0}
+%                     If 0, use FFTs and Hanning window tapering.  
+%                     If [real positive scalar], the number of cycles in each Morlet 
+%                        wavelet, held constant across frequencies.
+%                     If [cycles cycles(2)] wavelet cycles increase with 
+%                        frequency beginning at cycles(1) and, if cycles(2) > 1, 
+%                        increasing to cycles(2) at the upper frequency,
+%                      If cycles(2) = 0, use same window size for all frequencies 
+%                        (similar to FFT when cycles(1) = 1)
+%                      If cycles(2) = 1, cycles do not increase (same as giving
+%                         only one value for 'cycles'). This corresponds to a pure
+%                         wavelet decomposition, same number of cycles at each frequency.
+%                      If 0 < cycles(2) < 1, cycles increase linearly with frequency:
+%                         from 0 --> FFT (same window width at all frequencies) 
+%                         to 1 --> wavelet (same number of cycles at all frequencies).
+%                     The exact number of cycles in the highest frequency window is 
+%                     indicated in the command line output. Typical value: 'cycles', [3 0.5]
+%   * freq_range: [min max] frequency limits. 
+%   * alpha:    If non-0, compute two-tailed permutation significance 
+%                      probability level. Show non-signif. output values 
+%                      as green.                              {default: 0}
+%   * fdr:      ['none'|'fdr'] correction for multiple comparison
+%                     'fdr' uses false detection rate (see function fdr()).
+%                     Not available for condition comparisons.
+%                     {default:'none'} 
+%   * scale:    ['log'|'abs'] visualize power in log scale (dB) or absolute
+%                     scale. {default: 'log'}
+%   * basenorm: ['on'|'off'] 'on' normalize baseline in the power spectral
+%                     average; else 'off', divide by the average power across 
+%                     trials at each frequency (gain model). {default:
+%                     'off'}
+%   * erps_max: [real] set the ERSP max. For the color scale (min= -max)
+%                       {auto}
+%   * path_to_save: the directory where the plots and .mat with results are
+%                   stored.
+%OUTPUTS:
+%   * time frequency charts per channel are saved in the specified
+%       directory and .mat files per subject and overall are saved with the following results:
+% (note: for subject files saved results are named as following with 's_'
+% as prefix, and for two conditions each result is a cell with the results for condition1, 
+% condition2 and the difference where necessary)
+%            ersp   = the time frequency charts per subject (channel,freq,time,subjects) 
+%                     matrix of log spectral diffs from baseline
+%                     (in dB log scale or absolute scale). 
+%            itc    = (channel,nfreqs,timesout,subjects) matrix of complex inter-trial coherencies.
+%                     itc is complex -- ITC magnitude is abs(itc); ITC phase in radians
+%                     is angle(itc), or in deg phase(itc)*180/pi.
+%            mbases  = (channel,freqs,subjects) baseline power spectrum. Note that even, when selecting the 
+%                     the 'trialbase' option, the average power spectrum is
+%                     returned (not trial based). To obtain the baseline of
+%                     each trial, recompute it manually using the tfdata
+%                     output described below.
+%            timesout  = vector of output times (spectral time window centers) (in ms).
+%            freqs/freqsout  = vector of frequency bin centers (in Hz).
+%            erspboot  = (nfreqs,2) matrix of [lower upper] ERSP significance.
+%            itcboot  = (nfreqs) matrix of [upper] abs(itc) threshold.
+%            tfX  = (subject) struct. Optional (nfreqs,timesout,trials) time/frequency decomposition 
+%                      of the single data trials. Values are complex.
+%           maskerps = (channel,nfreqs,timesout,subjects) mask for ersp charts (if alpha is set, if not empty)
+%           maskitc = (channel,nfreqs,timesout,subjects) mask for ersp charts (if alpha is set, if not empty)
+%           pa = (subject) struct. output of 'phsamp','on' - deprecated?
+%           channel_labels = (channel nr, 1) channel labels
+%           resdiff = (channels,freqs,timesout) difference array (of accumulated surrogate data) for the actual (non-shuffled) data, if more than one
+%                       arg pair is called, format is a cell array of matrices.
+%           g = struct with time frequency paramters
 %----------------------------------
 
 %-------PATH MANAGEMENT-----------
@@ -91,8 +175,7 @@ for suj = 1 : file_nr
     pointrange2 = round(min((tlimits(2)/1000-EEG.xmin)*EEG.srate, EEG.pnts));
     pointrange = [pointrange1:pointrange2];
      
-    for ch = 1 : 3        
-    %for ch = 1 : ch_nr        
+    for ch = 1 : ch_nr        
         chanlabel = EEG.chanlocs(ch).labels;   
         channel_labels{ch} = chanlabel;
         
