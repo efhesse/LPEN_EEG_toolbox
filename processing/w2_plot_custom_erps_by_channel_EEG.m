@@ -1,4 +1,4 @@
-function data = w2_plot_custom_erps_by_channel_EEG(path_to_file,file_name,condition_nr,stats,path_to_save,data)
+function data = w2_plot_custom_erps_by_channel_EEG(path_to_file,file_name,condition_nr,mean_mat,stats,path_to_save,data)
 
 %-------DESCRIPTION---------------
 %Plots time frequency charts per channel calculated by w_custom_erps_by_channel_EEG
@@ -39,6 +39,7 @@ assert(exist(pfile_name,'file') == 2,['File not found! file name: ' pfile_name '
 %-------LOAD PARAMETERS------------
 %----------------------------------
 condition_nr = str2num(condition_nr);
+mean_mat = str2num(mean_mat);
 
 %assert possible values are 1 or 2
 assert((condition_nr == 1 || condition_nr == 2),'Error. condition_nr allowed values are 1 or 2.');
@@ -49,5 +50,9 @@ assert((condition_nr == 1 || condition_nr == 2),'Error. condition_nr allowed val
 if condition_nr == 1
     plot_erps_custom_by_channel(pfile_name,stats,path_to_save);
 else
-    plot_erps_custom_2_mean_conditions_by_channel(pfile_name,stats,path_to_save)
+    if mean_mat == 1
+        plot_erps_custom_2_mean_conditions_by_channel(pfile_name,stats,path_to_save)
+    else
+        plot_erps_custom_2_conditions_by_channel(pfile_name,stats,path_to_save)
+    end        
 end

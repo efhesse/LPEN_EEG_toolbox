@@ -34,7 +34,8 @@ else
     setylim = 0;
 end;
 
-hdl = figure;
+hdl = [];
+if strcmpi(g.newfig, 'on'), hdl = figure; end; % declare a new figure
 
 switch lower(g.plotitc)
     case 'on',

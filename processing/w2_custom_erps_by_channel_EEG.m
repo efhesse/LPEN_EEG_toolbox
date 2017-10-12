@@ -1,4 +1,4 @@
-function [data] = w2_custom_erps_by_channel_EEG(path_to_files,condition_1,condition_2,cycles,freq_range,alpha,fdr,scale,basenorm,erps_max,path_to_save,data);
+function [data] = w2_custom_erps_by_channel_EEG(path_to_files,condition_1,condition_2,cycles,freq_range,alpha,fdr,scale,basenorm,erps_max,path_to_save,prefix_to_save,data);
 
 %-------DESCRIPTION---------------
 %Calculates time frequency charts for every set in the specified directory.
@@ -156,9 +156,10 @@ for suj = 1 : file_nr
     if ~isempty(condition_1) && ~isempty(condition_2) %two conditions
         two_conditions = 1;
         c1_EEG = pop_selectevent( EEG, 'type', {condition_1} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
-        c2_EEG = pop_selectevent( EEG, 'type', {condition_2} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
+        c2_EEG = pop_selectevent( EEG, 'type', {condition_2} ,'deleteevents','off','deleteepochs','on','invertepochs','off');        
     elseif isempty(condition_1) && isempty(condition_2) %no filtering by condition, one dataset
         c1_EEG = EEG;
+        assert(isempty(strtrim(prefix_to_save)) == 0,'Error. If no conditions are loaded, a prefix MUST be defined to save results.');
     else    %only one condition filtering, one dataset
         if isempty(condition_1) && ~isempty(condition_2) %
             condition_1 = condition_2;
@@ -168,14 +169,15 @@ for suj = 1 : file_nr
             c1_EEG = pop_selectevent( EEG, 'type', {condition_1} ,'deleteevents','off','deleteepochs','on','invertepochs','off');
         end
     end 
-        
+    
     %calculate point range 
     tlimits = [EEG.xmin, EEG.xmax]*1000;
     pointrange1 = round(max((tlimits(1)/1000-EEG.xmin)*EEG.srate, 1));
     pointrange2 = round(min((tlimits(2)/1000-EEG.xmin)*EEG.srate, EEG.pnts));
     pointrange = [pointrange1:pointrange2];
      
-    for ch = 1 : ch_nr        
+    for ch = 1 : 1  
+    %for ch = 1 : ch_nr        
         chanlabel = EEG.chanlocs(ch).labels;   
         channel_labels{ch} = chanlabel;
         
@@ -216,7 +218,7 @@ for suj = 1 : file_nr
                 c1_c2_erpsboot(ch,:,:,:,suj) = Pboot{3};
                 c1_itcboot(ch,:,suj) = Rboot{1};
                 c2_itcboot(ch,:,suj) = Rboot{2};
-                c1_c2_itcboot(ch,:,:,suj) = Rboot{3};
+                c1_c2_itcboot(ch,:,:,:,suj) = Rboot{3};
                 c1_maskersp(ch,:,:,suj) = maskersp{1};
                 c2_maskersp(ch,:,:,suj) = maskersp{2};
                 c1_maskitc(ch,:,:,suj) = maskitc{1};
@@ -250,8 +252,13 @@ for suj = 1 : file_nr
     
     %save data for suj
     [filepath,file_name_to_save,ext] = fileparts(file_name);
+
+    prefix_file_name_to_save = [];
+    if ~isempty(prefix_to_save)
+        prefix_file_name_to_save = [prefix_to_save '_'];
+    end
     if two_conditions
-        mat_name = fullfile(path_to_save,[file_name_to_save '_' condition_1 '_' condition_2 '.mat']);
+        mat_name = fullfile(path_to_save,[prefix_file_name_to_save  file_name_to_save '_' condition_1 '_' condition_2 '.mat']);
         s_data = {c1_data(:,:,suj),c2_data(:,:,suj)};
         s_erps = {c1_erps(:,:,:,suj),c2_erps(:,:,:,suj),c1_c2_erps(:,:,:,suj)};
         s_erpsboot = {c1_erpsboot(:,:,:,suj),c2_erpsboot(:,:,:,suj),c1_c2_erpsboot(:,:,:,suj)};
@@ -268,8 +275,12 @@ for suj = 1 : file_nr
         c2_alltfX(suj).tfX = c2_tfX;
         c1_allpa(suj).PA =  c1_pa;
         c2_allpa(suj).PA = c2_pa;
-    else
-        mat_name = fullfile(path_to_save,[file_name_to_save '_' condition_1 '.mat']);
+    else        
+        if ~isempty(condition_1)
+            mat_name = fullfile(path_to_save,[prefix_file_name_to_save file_name_to_save '_' condition_1 '.mat']);
+        else
+            mat_name = fullfile(path_to_save,[prefix_file_name_to_save file_name_to_save '.mat']);
+        end
         s_resdiff = [];
         s_data = c1_data(:,:,suj);
         s_itc = c1_itc(:,:,suj);
@@ -290,6 +301,7 @@ for suj = 1 : file_nr
     
     clear s_erps s_erpsboot s_tfX s_mbases s_resdiff s_data s_itc s_itcboot s_maskerps s_maskitc s_pa
 end
+
 %save results
 if two_conditions
     erps = {c1_erps,c2_erps,c1_c2_erps};
@@ -303,7 +315,7 @@ if two_conditions
     mbases = {c1_mbases,c2_mbases,c1_c2_mbases};
     maskerps = {c1_maskersp,c2_maskersp};
     maskitc = {c1_maskitc,c2_maskitc};
-    prefix_file_name_to_save = [condition_1 '_' condition_2];
+    prefix_file_name_to_save = [prefix_file_name_to_save condition_1 '_' condition_2];
 else
     erps = c1_erps;
     erpsboot = c1_erpsboot;
@@ -316,7 +328,7 @@ else
     resdiff = [];
     maskerps = c1_maskersp;
     maskitc = c1_maskitc;
-    prefix_file_name_to_save = [condition_1];
+    prefix_file_name_to_save = [prefix_file_name_to_save condition_1];
 end
 
 %save results in mat

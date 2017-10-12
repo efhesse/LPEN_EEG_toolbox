@@ -49,6 +49,8 @@ for ch = 1 : channel_nr
     else
         Pboot_to_plot = [];
         Rboot_to_plot = [];
+        maskersp_to_plot = [];
+        maskitc_to_plot = [];
     end
     ERP_to_plot = ERP(ch,:);
     mbase_to_plot = mbases(ch,:); 

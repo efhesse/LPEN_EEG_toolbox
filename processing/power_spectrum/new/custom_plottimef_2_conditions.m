@@ -45,7 +45,10 @@ meanmbase = mbase{3};
 
 g.titleall = g.title;
 hdl = [];
-if strcmpi(g.newfig, 'on'), hdl = figure; end; % declare a new figure
+if strcmpi(g.newfig, 'on')
+    hdl = figure; 
+    g.newfig = 'off';
+end; % declare a new figure
 
 % using same color scale
 % ----------------------
@@ -59,7 +62,7 @@ end;
 subplot(1,3,1); % plot Condition 1
 g.title = g.titleall{1};
 %g = custom_plottimef(P1, R1, Pboot1, Rboot1, mean(mdata{1},2), freqs, timesout, mbase{1}, maskerps1, maskitc1, g);
-g = custom_plottimef(P1, R1, Pboot1, Rboot1, mdata{1}, freqs, timesout, mbase{1}, maskerps1, maskitc1, g);
+custom_plottimef(P1, R1, Pboot1, Rboot1, mdata{1}, freqs, timesout, mbase{1}, maskerps1, maskitc1, g);
 g.itcavglim = [];
 
 subplot(1,3,2); % plot Condition 2

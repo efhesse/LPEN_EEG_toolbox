@@ -171,7 +171,7 @@ for ch = 1 : channel_nr
     c1.g.title = {condition_1,condition_2};
     suj.g = c1.g; %set other conditions such as alpha and fdr, for example, before calling precalculated function
 
-    [ERP,P,R,mbase,timesout,freqsout,Pboot,Rboot,resdiff,alltfX,PA,maskersp,maskitc,g] = custom_newtimef_2_precalculated_conditions(suj);
+    [ERP,P,R,mbase,timesout,freqs,Pboot,Rboot,resdiff,alltfX,PA,maskersp,maskitc,g] = custom_newtimef_2_precalculated_conditions(suj);
     
     %load in results matrix
     c1_data(ch,:) = ERP{1};
@@ -222,4 +222,4 @@ maskitc = {c1_maskitc,c2_maskitc};
 prefix_file_name_to_save = [condition_1 '_' condition_2];
 
 mat_name = fullfile(path_to_save,[prefix_file_name_to_save '.mat']);
-save(mat_name, 'erps','erpsboot','tfX','mbases','timesout','freqsout','g','mdata','itc','itcboot','resdiff','maskerps','maskitc','pa','channel_labels');
+save(mat_name, 'erps','erpsboot','tfX','mbases','timesout','freqs','g','mdata','itc','itcboot','resdiff','maskerps','maskitc','pa','channel_labels');
